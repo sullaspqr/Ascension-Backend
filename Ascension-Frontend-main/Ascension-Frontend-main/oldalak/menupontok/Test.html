@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="hu">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ascension – Test</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/css/main_style.css" />
+  </head>
+  <body>
+    <header class="core-header">
+      <a href="../main.html"><h1>Ascension</h1></a>
+      <nav class="core-nav">
+        <a href="../menupontok/Test.html">Test</a>
+        <a href="../menupontok/Arc.html">Arc</a>
+        <a href="../menupontok/Mental.html">Mentál</a>
+      </nav>
+      <!-- Bejelentkezés/Regisztráció gomb -->
+      <button
+        id="auth-toggle"
+        class="auth-toggle"
+        aria-label="Bejelentkezés / Regisztráció"
+        title="Bejelentkezés / Regisztráció"
+      >
+        Bejelentkezés
+      </button>
+    </header>
+
+    <main class="mainwindow-content">
+      <h2>Test</h2>
+
+      <!-- 1. Adatok lekérdezése -->
+      <section class="data-input-section">
+        <h3>Személyes Adatok</h3>
+        <div class="form-container">
+          <div class="form-group">
+            <label for="age">Életkor:</label>
+            <input
+              type="number"
+              id="age"
+              placeholder="pl. 25"
+              min="10"
+              max="100"
+            />
+          </div>
+          <div class="form-group">
+            <label for="weight">Súly (kg):</label>
+            <input
+              type="number"
+              id="weight"
+              placeholder="pl. 75"
+              min="30"
+              max="300"
+            />
+          </div>
+          <div class="form-group">
+            <label for="height">Magasság (cm):</label>
+            <input
+              type="number"
+              id="height"
+              placeholder="pl. 180"
+              min="100"
+              max="250"
+            />
+          </div>
+          <div class="form-group">
+            <label for="gender">Nem:</label>
+            <select id="gender">
+              <option value="">Válassz...</option>
+              <option value="male">Férfi</option>
+              <option value="female">Nő</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="activity">Aktivitási szint:</label>
+            <select id="activity">
+              <option value="">Válassz...</option>
+              <option value="1.2">Ülő életmód</option>
+              <option value="1.375">Könnyű aktivitás (1-3 nap/hét)</option>
+              <option value="1.55">Közepes aktivitás (3-5 nap/hét)</option>
+              <option value="1.725">Aktív (6-7 nap/hét)</option>
+              <option value="1.9">Nagyon aktív (napi 2x edzés)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="goal">Cél:</label>
+            <select id="goal">
+              <option value="">Válassz...</option>
+              <option value="deficit">Fogyás</option>
+              <option value="maintain">Tartás</option>
+              <option value="surplus">Tömegnövelés</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="experience">Edzés tapasztalat:</label>
+            <select id="experience">
+              <option value="">Válassz...</option>
+              <option value="beginner">Kezdő (0-1 év)</option>
+              <option value="intermediate">Haladó (1-3 év)</option>
+              <option value="advanced">Profi (3+ év)</option>
+            </select>
+          </div>
+          <button class="btn-calculate" onclick="calculateAndGenerate()">
+            Terv Generálása
+          </button>
+        </div>
+      </section>
+
+      <!-- 2. Kalória számítás eredmény -->
+      <section id="calorie-result" class="result-section" style="display: none">
+        <h3>Kalória Cél</h3>
+        <div class="result-card">
+          <p class="result-label">BMR (Alap metabolizmus):</p>
+          <p id="bmr-value" class="result-value">-</p>
+        </div>
+        <div class="result-card">
+          <p class="result-label">TDEE (Napi kalóriaigény):</p>
+          <p id="tdee-value" class="result-value">-</p>
+        </div>
+        <div class="result-card highlight">
+          <p class="result-label">Cél Kalória (céloddal):</p>
+          <p id="goal-value" class="result-value">-</p>
+        </div>
+        <div class="macro-breakdown">
+          <h4>Makrók ajánlása:</h4>
+          <p id="protein-value">Fehérje: -</p>
+          <p id="fat-value">Zsír: -</p>
+          <p id="carb-value">Szénhidrát: -</p>
+        </div>
+      </section>
+
+      <!-- 2/b. Napi Kalória Számláló (USDA adatbázissal) -->
+      <section id="food-tracker" class="result-section">
+        <h3>Napi Kalória Számláló</h3>
+        <div class="form-container">
+          <div class="food-control-row">
+            <div class="form-group">
+              <label for="food-search">Étel keresése:</label>
+              <input
+                type="text"
+                id="food-search"
+                placeholder="pl. alma, csirke mell"
+              />
+            </div>
+            <div class="form-group">
+              <label for="food-grams">Mennyiség (gramm):</label>
+              <input
+                type="number"
+                id="food-grams"
+                placeholder="pl. 150"
+                min="1"
+              />
+            </div>
+            <button class="btn-calculate" id="add-food-btn">Hozzáadás</button>
+          </div>
+          <div id="food-results" class="result-card"></div>
+          <div id="food-preview" class="result-card food-preview"></div>
+        </div>
+
+        <div class="result-card">
+          <h4>
+            Mai tételek <span id="food-count" class="food-count">(0)</span>
+          </h4>
+          <div id="food-list" class="food-list"></div>
+        </div>
+
+        <div class="result-card highlight">
+          <h4>Összesítés (ma)</h4>
+          <p id="total-calories">Kalória: 0 kcal</p>
+          <p id="total-protein">Fehérje: 0 g</p>
+          <p id="total-carbs">Szénhidrát: 0 g</p>
+        </div>
+      </section>
+
+      <!-- 3. Edzésterv -->
+      <section
+        id="training-plan"
+        class="training-section"
+        style="display: none"
+      >
+        <h3>Személyre Szabott Edzésterv</h3>
+        <div id="plan-container"></div>
+      </section>
+      <!-- 4. Progressive Overload Tracker -->
+      <section
+        id="tracker-section"
+        class="tracker-section"
+        style="display: none"
+      >
+        <h3>Progressive Overload Tracker</h3>
+        <p class="tracker-info">
+          Add meg a mai edzésed súlyait az alábbi gyakorlatokhoz:
+        </p>
+
+        <div id="exercise-inputs"></div>
+
+        <button class="btn-save-workout" onclick="saveWorkoutSession()">
+          Edzés Mentése
+        </button>
+
+        <div class="tracker-history">
+          <h4>Előrehaladás Történet</h4>
+          <div id="workout-list"></div>
+        </div>
+      </section>
+
+      <!-- 5. Alkohol Követő -->
+      <section id="alcohol-tracker" class="tracker-section">
+        <h3>Alkohol Követő 🍺</h3>
+        <p class="tracker-info">
+          Rögzítsd az elfogyasztott alkoholos italokat és kövesd nyomon a kalóriákat.
+        </p>
+
+        <div class="form-container">
+          <div class="form-group">
+            <label for="alcohol-drink-type">Ital típusa:</label>
+            <select id="alcohol-drink-type">
+              <option value="">Válassz...</option>
+              <option value="Sör (0.5L)">Sör (0.5L) - 5%</option>
+              <option value="Bor (1dl)">Bor (1dl) - 12%</option>
+              <option value="Pezsgő (1dl)">Pezsgő (1dl) - 12%</option>
+              <option value="Vodka (4cl)">Vodka (4cl) - 40%</option>
+              <option value="Whisky (4cl)">Whisky (4cl) - 40%</option>
+              <option value="Rum (4cl)">Rum (4cl) - 40%</option>
+              <option value="Gin (4cl)">Gin (4cl) - 40%</option>
+              <option value="Pálinka (5cl)">Pálinka (5cl) - 40%</option>
+              <option value="custom">Egyéni...</option>
+            </select>
+          </div>
+
+          <div id="custom-alcohol-fields" style="display: none;">
+            <div class="form-group">
+              <label for="alcohol-custom-name">Ital neve:</label>
+              <input type="text" id="alcohol-custom-name" placeholder="pl. Mojito" />
+            </div>
+            <div class="form-group">
+              <label for="alcohol-amount">Mennyiség (ml):</label>
+              <input type="number" id="alcohol-amount" placeholder="pl. 500" min="1" />
+            </div>
+            <div class="form-group">
+              <label for="alcohol-percentage">Alkohol % (v/v):</label>
+              <input type="number" id="alcohol-percentage" placeholder="pl. 5" min="0" max="100" step="0.1" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="alcohol-date">Dátum:</label>
+            <input type="date" id="alcohol-date" />
+          </div>
+
+          <button class="btn-calculate" onclick="addAlcoholEntry()">
+            Hozzáadás
+          </button>
+        </div>
+
+        <div class="result-card">
+          <h4>Mai alkohol bejegyzések <span id="alcohol-count" class="food-count">(0)</span></h4>
+          <div id="alcohol-list" class="food-list"></div>
+        </div>
+
+        <div class="result-card highlight">
+          <h4>Összesítés (ma)</h4>
+          <p id="alcohol-total-ml">Mennyiség: 0 ml</p>
+          <p id="alcohol-total-calories">Kalória: 0 kcal</p>
+          <p id="alcohol-total-count">Italok száma: 0</p>
+        </div>
+      </section>
+    </main>
+
+    <!-- Bejelentkezés/Regisztráció Modal -->
+    <div id="auth-modal" class="auth-modal">
+      <div class="auth-modal-content">
+        <button class="auth-close" aria-label="Bezárás">&times;</button>
+        
+        <!-- Tab váltó gombok -->
+        <div class="auth-tabs">
+          <button class="auth-tab active" data-tab="login">Bejelentkezés</button>
+          <button class="auth-tab" data-tab="register">Regisztráció</button>
+        </div>
+
+        <!-- Bejelentkezési form -->
+        <form id="login-form" class="auth-form active">
+          <h2>Bejelentkezés</h2>
+          <div class="form-group">
+            <label for="login-email">E-mail vagy felhasználónév</label>
+            <input type="text" id="login-email" name="email" required />
+          </div>
+          <div class="form-group">
+            <label for="login-password">Jelszó</label>
+            <input type="password" id="login-password" name="password" required />
+          </div>
+          <button type="submit" class="btn-auth">Belépés</button>
+        </form>
+
+        <!-- Regisztrációs form -->
+        <form id="register-form" class="auth-form">
+          <h2>Regisztráció</h2>
+          <div class="form-group">
+            <label for="register-username">Felhasználónév</label>
+            <input type="text" id="register-username" name="username" required />
+          </div>
+          <div class="form-group">
+            <label for="register-email">E-mail cím</label>
+            <input type="email" id="register-email" name="email" required />
+          </div>
+          <div class="form-group">
+            <label for="register-password">Jelszó</label>
+            <input type="password" id="register-password" name="password" required />
+          </div>
+          <div class="form-group">
+            <label for="register-password-confirm">Jelszó megerősítése</label>
+            <input type="password" id="register-password-confirm" name="password-confirm" required />
+          </div>
+          <button type="submit" class="btn-auth">Regisztráció</button>
+        </form>
+      </div>
+    </div>
+
+    <script src="../../assets/js/test.js"></script>
+    <script src="../../assets/js/auth.js"></script>
+  </body>
+</html>

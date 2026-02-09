@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ascension – Core</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/main_style.css">
+</head>
+<body class="page-loaded">
+
+    <!-- MINIMAL HEADER -->
+    <header class="core-header">
+        <a href="../index.html"><h1>Ascension</h1></a>
+        <nav class="core-nav">
+            <a href="../oldalak/menupontok/Test.html">Test</a>
+            <a href="../oldalak/menupontok/Arc.html">Arc</a>
+            <a href="../oldalak/menupontok/Mental.html">Mentál</a>
+        </nav>
+        <!-- Bejelentkezés/Regisztráció gomb -->
+        <button
+            id="auth-toggle"
+            class="auth-toggle"
+            aria-label="Bejelentkezés / Regisztráció"
+            title="Bejelentkezés / Regisztráció"
+        >
+            Bejelentkezés
+        </button>
+    </header>
+
+    <!-- HERO -->
+    <section class="core-hero">
+        <h2>Beyond comfort. Beyond average.</h2>
+        <p>
+            Ez nem motiváció.<br>
+            Ez egy rendszer azoknak, akik felelősséget vállalnak.
+        </p>
+    </section>
+
+    <!-- NAPI TEVÉKENYSÉGEK: Edzés, Arcápolás, Mentális egészség -->
+    <section class="daily-checklist">
+        <div class="dropdown-checklist">
+            <button class="dropdown-toggle">Edzés</button>
+            <div class="dropdown-content">
+                <label><input type="checkbox" id="train-check"> Ma edzettem</label>
+            </div>
+        </div>
+        <div class="dropdown-checklist">
+            <button class="dropdown-toggle">Arcápolás</button>
+            <div class="dropdown-content">
+                <label><input type="checkbox" id="face-check"> Ma foglalkoztam az arcápolásommal</label>
+            </div>
+        </div>
+        <div class="dropdown-checklist">
+            <button class="dropdown-toggle">Mentális egészség</button>
+            <div class="dropdown-content">
+                <label><input type="checkbox" id="mental-check"> Ma foglalkoztam a mentális egészségemmel</label>
+            </div>
+        </div>
+    </section>
+    </section>
+
+    <!-- SECTIONS -->
+    <section class="core-section" id="training">
+        
+    </section>
+
+    <!-- Bejelentkezés/Regisztráció Modal -->
+    <div id="auth-modal" class="auth-modal">
+      <div class="auth-modal-content">
+        <button class="auth-close" aria-label="Bezárás">&times;</button>
+        
+        <!-- Tab váltó gombok -->
+        <div class="auth-tabs">
+          <button class="auth-tab active" data-tab="login">Bejelentkezés</button>
+          <button class="auth-tab" data-tab="register">Regisztráció</button>
+        </div>
+
+        <!-- Bejelentkezési form -->
+        <form id="login-form" class="auth-form active">
+          <h2>Bejelentkezés</h2>
+          <div class="form-group">
+            <label for="login-email">E-mail vagy felhasználónév</label>
+            <input type="text" id="login-email" name="email" required />
+          </div>
+          <div class="form-group">
+            <label for="login-password">Jelszó</label>
+            <input type="password" id="login-password" name="password" required />
+          </div>
+          <button type="submit" class="btn-auth">Belépés</button>
+        </form>
+
+        <!-- Regisztrációs form -->
+        <form id="register-form" class="auth-form">
+          <h2>Regisztráció</h2>
+          <div class="form-group">
+            <label for="register-username">Felhasználónév</label>
+            <input type="text" id="register-username" name="username" required />
+          </div>
+          <div class="form-group">
+            <label for="register-email">E-mail cím</label>
+            <input type="email" id="register-email" name="email" required />
+          </div>
+          <div class="form-group">
+            <label for="register-password">Jelszó</label>
+            <input type="password" id="register-password" name="password" required />
+          </div>
+          <div class="form-group">
+            <label for="register-password-confirm">Jelszó megerősítése</label>
+            <input type="password" id="register-password-confirm" name="password-confirm" required />
+          </div>
+          <button type="submit" class="btn-auth">Regisztráció</button>
+        </form>
+      </div>
+    </div>
+
+</body>
+    <script src="../assets/js/script.js"></script>
+    <script src="../assets/js/auth.js"></script>
+</html>

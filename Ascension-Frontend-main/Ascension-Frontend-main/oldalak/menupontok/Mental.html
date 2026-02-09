@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="hu">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Ascension – Mentál</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="../../assets/css/main_style.css" />
+  </head>
+  <body>
+    <header class="core-header">
+      <a href="../main.html"><h1>Ascension</h1></a>
+      <nav class="core-nav">
+        <a href="../menupontok/Test.html">Test</a>
+        <a href="../menupontok/Arc.html">Arc</a>
+        <a href="../menupontok/Mental.html">Mentál</a>
+      </nav>
+      <!-- Bejelentkezés/Regisztráció gomb -->
+      <button
+        id="auth-toggle"
+        class="auth-toggle"
+        aria-label="Bejelentkezés / Regisztráció"
+        title="Bejelentkezés / Regisztráció"
+      >
+        Bejelentkezés
+      </button>
+    </header>
+
+    <main class="mainwindow-content">
+      <h2>Mentális</h2>
+      <p>
+        Az önfejlesztés nem trend.<br />
+        Felelősség.
+      </p>
+      <p>
+        Fegyelem a motiváció helyett.<br />
+        Tudatosság az ösztönök felett.
+      </p>
+    </main>
+
+    <!-- Bejelentkezés/Regisztráció Modal -->
+    <div id="auth-modal" class="auth-modal">
+      <div class="auth-modal-content">
+        <button class="auth-close" aria-label="Bezárás">&times;</button>
+        
+        <!-- Tab váltó gombok -->
+        <div class="auth-tabs">
+          <button class="auth-tab active" data-tab="login">Bejelentkezés</button>
+          <button class="auth-tab" data-tab="register">Regisztráció</button>
+        </div>
+
+        <!-- Bejelentkezési form -->
+        <form id="login-form" class="auth-form active">
+          <h2>Bejelentkezés</h2>
+          <div class="form-group">
+            <label for="login-email">E-mail vagy felhasználónév</label>
+            <input type="text" id="login-email" name="email" required />
+          </div>
+          <div class="form-group">
+            <label for="login-password">Jelszó</label>
+            <input type="password" id="login-password" name="password" required />
+          </div>
+          <button type="submit" class="btn-auth">Belépés</button>
+        </form>
+
+        <!-- Regisztrációs form -->
+        <form id="register-form" class="auth-form">
+          <h2>Regisztráció</h2>
+          <div class="form-group">
+            <label for="register-username">Felhasználónév</label>
+            <input type="text" id="register-username" name="username" required />
+          </div>
+          <div class="form-group">
+            <label for="register-email">E-mail cím</label>
+            <input type="email" id="register-email" name="email" required />
+          </div>
+          <div class="form-group">
+            <label for="register-password">Jelszó</label>
+            <input type="password" id="register-password" name="password" required />
+          </div>
+          <div class="form-group">
+            <label for="register-password-confirm">Jelszó megerősítése</label>
+            <input type="password" id="register-password-confirm" name="password-confirm" required />
+          </div>
+          <button type="submit" class="btn-auth">Regisztráció</button>
+        </form>
+      </div>
+    </div>
+
+    <script src="../../assets/js/auth.js"></script>
+  </body>
+</html>

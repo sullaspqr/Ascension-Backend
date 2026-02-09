@@ -3,13 +3,51 @@ import cors from "cors";
 import multer from "multer";
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
-import dotenv from "dotenv";
-
-dotenv.config();
+import mysql from "mysql2/promise";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
 const app = express();
 app.use(cors());
+app.use(express.json());
 const upload = multer({ dest: "uploads/" });
+
+/* ====== MYSQL KAPCSOLAT - Állítsd be a saját adataidat! ====== */
+const dbConfig = {
+  host: 'localhost',        // MySQL szerver címe
+  user: 'root',             // MySQL felhasználónév
+  password: '',             // MySQL jelszó (XAMPP-ban alapból üres)
+  database: 'ascension_db'  // Az adatbázis neve amit létrehoztál
+};
+
+// MySQL kapcsolat létrehozása és ellenőrzése
+let db;
+async function connectDatabase() {
+  try {
+    db = await mysql.createConnection(dbConfig);
+    console.log('✅ MySQL kapcsolat OK - Ascension adatbázis elérhető!');
+    
+    // Táblák ellenőrzése
+    const [tables] = await db.execute("SHOW TABLES LIKE 'users'");
+    if (tables.length === 0) {
+      console.log('⚠️  FIGYELEM: A users tábla még nem létezik!');
+      console.log('💡 Futtasd le a database.sql-t phpMyAdmin-ban!');
+    } else {
+      console.log('✅ Users tábla megtalálva');
+    }
+  } catch (error) {
+    console.error('❌ MySQL kapcsolat HIBA:', error.message);
+    console.log('\n💡 HIBAELHÁRÍTÁS:');
+    console.log('1. XAMPP/WAMP elindítva? MySQL fut?');
+    console.log('2. phpMyAdmin-ban lefuttattad a database.sql-t?');
+    console.log('3. Adatbázis neve: ascension_db');
+    console.log('4. server.js 18-22. sor: Jók az adatok?\n');
+  }
+}
+
+await connectDatabase();
+
+const JWT_SECRET = 'ascension_secret_2026';
 
 /* ====== CLOUDINARY ====== */
 cloudinary.config({
@@ -204,6 +242,309 @@ app.get("/nutrition/search", async (req, res) => {
   } catch (err) {
     console.error("/nutrition/search error:", err);
     res.status(500).json({ error: "Keresés sikertelen" });
+  }
+});
+
+/* ====== JWT MIDDLEWARE ====== */
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+  
+  if (!token) {
+    return res.status(401).json({ success: false, error: "Token hiányzik" });
+  }
+  
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err) {
+      return res.status(403).json({ success: false, error: "Érvénytelen token" });
+    }
+    req.user = user;
+    next();
+  });
+}
+
+/* ====== AUTH ENDPOINTS ====== */
+
+// Regisztráció
+app.post("/api/auth/register", async (req, res) => {
+  try {
+    // Ellenőrizzük hogy van-e DB kapcsolat
+    if (!db) {
+      return res.status(500).json({ 
+        success: false, 
+        error: "Adatbázis kapcsolat nincs! Ellenőrizd a backend-et!" 
+      });
+    }
+    
+    const { username, email, password } = req.body;
+    
+    console.log('📝 Regisztráció kísérlet:', { username, email });
+    
+    if (!username || !email || !password) {
+      return res.status(400).json({ success: false, error: "Minden mező kitöltése kötelező" });
+    }
+    
+    if (password.length < 6) {
+      return res.status(400).json({ success: false, error: "A jelszónak legalább 6 karakter hosszúnak kell lennie" });
+    }
+    
+    // Email ellenőrzés
+    const [existing] = await db.execute(
+      'SELECT id FROM users WHERE email = ? OR username = ?',
+      [email, username]
+    );
+    
+    if (existing.length > 0) {
+      return res.status(400).json({ success: false, error: "Ez az email vagy felhasználónév már foglalt" });
+    }
+    
+    // Jelszó hash
+    const passwordHash = await bcrypt.hash(password, 10);
+    
+    // Beszúrás
+    const [result] = await db.execute(
+      'INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)',
+      [username, email, passwordHash]
+    );
+    
+    console.log('✅ Regisztráció sikeres! User ID:', result.insertId);
+    
+    // Token
+    const token = jwt.sign(
+      { userId: result.insertId, username, email },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+    
+    res.json({
+      success: true,
+      message: "Sikeres regisztráció",
+      token,
+      user: { id: result.insertId, username, email }
+    });
+  } catch (error) {
+    console.error("❌ Register error:", error);
+    res.status(500).json({ success: false, error: "Szerver hiba: " + error.message });
+  }
+});
+
+// Bejelentkezés
+app.post("/api/auth/login", async (req, res) => {
+  try {
+    // Ellenőrizzük hogy van-e DB kapcsolat
+    if (!db) {
+      return res.status(500).json({ 
+        success: false, 
+        error: "Adatbázis kapcsolat nincs! Ellenőrizd a backend-et!" 
+      });
+    }
+    
+    const { emailOrUsername, password } = req.body;
+    
+    console.log('🔐 Login kísérlet:', emailOrUsername);
+    
+    if (!emailOrUsername || !password) {
+      return res.status(400).json({ success: false, error: "Email/felhasználónév és jelszó megadása kötelező" });
+    }
+    
+    // Felhasználó keresése
+    const [users] = await db.execute(
+      'SELECT * FROM users WHERE email = ? OR username = ?',
+      [emailOrUsername, emailOrUsername]
+    );
+    
+    if (users.length === 0) {
+      return res.status(401).json({ success: false, error: "Helytelen email/felhasználónév vagy jelszó" });
+    }
+    
+    const user = users[0];
+    
+    // Jelszó ellenőrzés
+    const passwordMatch = await bcrypt.compare(password, user.password_hash);
+    
+    if (!passwordMatch) {
+      return res.status(401).json({ success: false, error: "Helytelen email/felhasználónév vagy jelszó" });
+    }
+    
+    console.log('✅ Login sikeres!', user.username);
+    
+    // Token
+    const token = jwt.sign(
+      { userId: user.id, username: user.username, email: user.email },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+    
+    res.json({
+      success: true,
+      message: "Sikeres bejelentkezés",
+      token,
+      user: { id: user.id, username: user.username, email: user.email }
+    });
+  } catch (error) {
+    console.error("❌ Login error:", error);
+    res.status(500).json({ success: false, error: "Szerver hiba: " + error.message });
+  }
+});
+
+/* ====== ALCOHOL TRACKING ENDPOINTS ====== */
+
+// Alkohol bejegyzés hozzáadása
+app.post("/api/alcohol/add", authenticateToken, async (req, res) => {
+  try {
+    if (!db) {
+      return res.status(500).json({ 
+        success: false, 
+        error: "Adatbázis kapcsolat nincs!" 
+      });
+    }
+    
+    const { drinkType, amountMl, alcoholPercentage, calories, date } = req.body;
+    const userId = req.user.userId;
+    
+    console.log('🍺 Alkohol hozzáadás:', { userId, drinkType, amountMl });
+    
+    if (!drinkType || !amountMl || alcoholPercentage === undefined || !calories || !date) {
+      return res.status(400).json({ 
+        success: false, 
+        error: "Minden mező kitöltése kötelező" 
+      });
+    }
+    
+    const [result] = await db.execute(
+      'INSERT INTO alcohol_entries (user_id, drink_type, amount_ml, alcohol_percentage, calories, date) VALUES (?, ?, ?, ?, ?, ?)',
+      [userId, drinkType, amountMl, alcoholPercentage, calories, date]
+    );
+    
+    console.log('✅ Alkohol bejegyzés mentve! ID:', result.insertId);
+    
+    res.json({
+      success: true,
+      message: "Alkohol bejegyzés sikeresen hozzáadva",
+      entryId: result.insertId
+    });
+  } catch (error) {
+    console.error("❌ Alcohol add error:", error);
+    res.status(500).json({ success: false, error: "Szerver hiba: " + error.message });
+  }
+});
+
+// Alkohol bejegyzések lekérése (adott dátum vagy időszak)
+app.get("/api/alcohol/entries", authenticateToken, async (req, res) => {
+  try {
+    if (!db) {
+      return res.status(500).json({ 
+        success: false, 
+        error: "Adatbázis kapcsolat nincs!" 
+      });
+    }
+    
+    const userId = req.user.userId;
+    const { date, startDate, endDate } = req.query;
+    
+    let query = 'SELECT * FROM alcohol_entries WHERE user_id = ?';
+    let params = [userId];
+    
+    if (date) {
+      query += ' AND date = ?';
+      params.push(date);
+    } else if (startDate && endDate) {
+      query += ' AND date BETWEEN ? AND ?';
+      params.push(startDate, endDate);
+    }
+    
+    query += ' ORDER BY date DESC, created_at DESC';
+    
+    const [entries] = await db.execute(query, params);
+    
+    res.json({
+      success: true,
+      entries
+    });
+  } catch (error) {
+    console.error("❌ Alcohol entries error:", error);
+    res.status(500).json({ success: false, error: "Szerver hiba: " + error.message });
+  }
+});
+
+// Alkohol bejegyzés törlése
+app.delete("/api/alcohol/:id", authenticateToken, async (req, res) => {
+  try {
+    if (!db) {
+      return res.status(500).json({ 
+        success: false, 
+        error: "Adatbázis kapcsolat nincs!" 
+      });
+    }
+    
+    const userId = req.user.userId;
+    const entryId = req.params.id;
+    
+    // Először ellenőrizzük, hogy a bejegyzés a felhasználóé-e
+    const [entries] = await db.execute(
+      'SELECT id FROM alcohol_entries WHERE id = ? AND user_id = ?',
+      [entryId, userId]
+    );
+    
+    if (entries.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        error: "Bejegyzés nem található vagy nincs jogosultságod hozzá" 
+      });
+    }
+    
+    await db.execute('DELETE FROM alcohol_entries WHERE id = ?', [entryId]);
+    
+    console.log('✅ Alkohol bejegyzés törölve! ID:', entryId);
+    
+    res.json({
+      success: true,
+      message: "Bejegyzés sikeresen törölve"
+    });
+  } catch (error) {
+    console.error("❌ Alcohol delete error:", error);
+    res.status(500).json({ success: false, error: "Szerver hiba: " + error.message });
+  }
+});
+
+// Alkohol statisztikák (összes kalória, ml stb. adott időszakra)
+app.get("/api/alcohol/stats", authenticateToken, async (req, res) => {
+  try {
+    if (!db) {
+      return res.status(500).json({ 
+        success: false, 
+        error: "Adatbázis kapcsolat nincs!" 
+      });
+    }
+    
+    const userId = req.user.userId;
+    const { startDate, endDate } = req.query;
+    
+    let query = `
+      SELECT 
+        COUNT(*) as total_entries,
+        SUM(amount_ml) as total_ml,
+        SUM(calories) as total_calories,
+        AVG(alcohol_percentage) as avg_alcohol_percentage
+      FROM alcohol_entries 
+      WHERE user_id = ?
+    `;
+    let params = [userId];
+    
+    if (startDate && endDate) {
+      query += ' AND date BETWEEN ? AND ?';
+      params.push(startDate, endDate);
+    }
+    
+    const [stats] = await db.execute(query, params);
+    
+    res.json({
+      success: true,
+      stats: stats[0]
+    });
+  } catch (error) {
+    console.error("❌ Alcohol stats error:", error);
+    res.status(500).json({ success: false, error: "Szerver hiba: " + error.message });
   }
 });
 
