@@ -47,8 +47,9 @@ body::-webkit-scrollbar {
 
 body, html {
     height: 100%;
-    /* Use Cinzel webfont (imported in index.html), fall back to Copperplate/Gothic variants */
-    font-family: 'Cinzel', 'Copperplate Gothic', 'Copperplate', 'Bebas Neue', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+    /* Arial bold for all text */
+    font-family: Arial, sans-serif;
+    font-weight: bold;
     background: var(--bg);
     color: var(--text);
     scroll-behavior: smooth;
@@ -224,9 +225,9 @@ section p {
     display: inline-block;
     padding: 15px 40px;
     font-size: 1.4rem;
-    /* Chrome-style grey/black gradient */
-    background: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(30,30,30,0.98) 100%);
-    color: var(--text);
+    /* White background */
+    background: #ffffff;
+    color: #000000;
     border-radius: 8px;
     text-decoration: none;
     cursor: pointer;
@@ -519,10 +520,7 @@ body.splash-visible { overflow: hidden; }
 /* Chrome lighting section */
 .chrome-section {
     padding: 64px 20px;
-    background: linear-gradient(180deg,
-        rgba(30,30,30,0.95) 0%,
-        rgba(44,46,48,0.9) 35%,
-        rgba(20,20,21,0.85) 100%);
+    background: #000000;
     color: var(--text);
     -webkit-font-smoothing: antialiased;
     display: block;

@@ -177,13 +177,9 @@
 html,
 body {
   height: 100%;
-  font-family: "Cinzel", "Bebas Neue", system-ui, sans-serif;
-  background: linear-gradient(
-    180deg,
-    var(--graphite),
-    var(--charcoal),
-    var(--dark)
-  );
+  font-family: Arial, sans-serif;
+  font-weight: bold;
+  background: #000000;
   color: var(--text);
   scroll-behavior: smooth;
 }
@@ -193,10 +189,10 @@ body {
   position: sticky;
   top: 0;
   z-index: 10;
-  padding: 28px 20px 18px;
+  padding: 40px 20px 30px;
   text-align: center;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0));
-  backdrop-filter: blur(6px);
+  background: #000000;
+  backdrop-filter: none;
 }
 
 .core-header h1 {
@@ -206,7 +202,10 @@ body {
 }
 
 .core-nav {
-  margin-top: 12px;
+  position: absolute;
+  top: 28px;
+  right: 180px;
+  margin: 0;
 }
 
 .core-nav a {
@@ -272,7 +271,8 @@ body {
 
 /* Címsor stílus */
 .mainwindow-content h2 {
-  font-family: "Cinzel", serif;
+  font-family: Arial, sans-serif;
+  font-weight: bold;
   font-size: 2.5rem;
   margin-bottom: 12px;
   text-align: center;
