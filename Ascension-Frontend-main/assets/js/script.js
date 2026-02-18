@@ -199,8 +199,102 @@ document.addEventListener("DOMContentLoaded", () => {
 document.addEventListener("DOMContentLoaded", () => {
   const toggles = document.querySelectorAll(".dropdown-toggle");
   const container = document.querySelector(".daily-checklist");
+  const ctaJoin = document.getElementById("cta-join");
+  
   if (!container || !toggles.length) return;
 
+  // Enable all dropdown toggles
+  toggles.forEach((btn) => {
+    btn.classList.remove("disabled");
+    
+    // Add click handler for navigation based on auth status
+    btn.addEventListener("click", function(e) {
+      e.preventDefault();
+      
+      const user = JSON.parse(localStorage.getItem('user'));
+      
+      if (!user) {
+        // User is not logged in, open registration modal
+        const authModal = document.getElementById("auth-modal");
+        const authTabs = document.querySelectorAll(".auth-tab");
+        const registerForm = document.getElementById("register-form");
+        const loginForm = document.getElementById("login-form");
+
+        if (authModal) {
+          authModal.classList.add("active");
+          document.body.style.overflow = "hidden";
+
+          // Switch to registration tab
+          authTabs.forEach(t => t.classList.remove("active"));
+          const registerTab = document.querySelector('.auth-tab[data-tab="register"]');
+          if (registerTab) {
+            registerTab.classList.add("active");
+            registerForm.classList.add("active");
+            loginForm.classList.remove("active");
+          }
+        }
+        return;
+      }
+
+      // User is logged in, navigate to appropriate page
+      const buttonText = btn.textContent.trim();
+      let targetPage = "";
+
+      switch(buttonText) {
+        case "Edzés":
+          targetPage = "../oldalak/menupontok/Test.html";
+          break;
+        case "Arcápolás":
+          targetPage = "../oldalak/menupontok/Arc.html";
+          break;
+        case "Mentális egészség":
+          targetPage = "../oldalak/menupontok/Mental.html";
+          break;
+        default:
+          return;
+      }
+
+      if (targetPage) {
+        window.location.href = targetPage;
+      }
+    });
+  });
+
+  // Handle CTA button click based on auth status
+  if (ctaJoin) {
+    ctaJoin.addEventListener("click", function(e) {
+      e.preventDefault();
+      
+      const user = JSON.parse(localStorage.getItem('user'));
+      
+      if (user) {
+        // User is logged in, redirect to Test page
+        window.location.href = "../oldalak/menupontok/Test.html";
+      } else {
+        // User is not logged in, open registration modal
+        const authModal = document.getElementById("auth-modal");
+        const authTabs = document.querySelectorAll(".auth-tab");
+        const registerForm = document.getElementById("register-form");
+        const loginForm = document.getElementById("login-form");
+
+        if (authModal) {
+          authModal.classList.add("active");
+          document.body.style.overflow = "hidden";
+
+          // Switch to registration tab
+          authTabs.forEach(t => t.classList.remove("active"));
+          const registerTab = document.querySelector('.auth-tab[data-tab="register"]');
+          if (registerTab) {
+            registerTab.classList.add("active");
+            registerForm.classList.add("active");
+            loginForm.classList.remove("active");
+          }
+        }
+      }
+    });
+  }
+
+  // Re-enable dropdown functionality
   toggles.forEach((btn) => {
     btn.addEventListener("click", (e) => {
       e.preventDefault();

@@ -177,17 +177,22 @@ document.addEventListener('DOMContentLoaded', function() {
     // Auth státusz ellenőrzése
     function checkAuthStatus() {
         const token = localStorage.getItem('authToken');
-        if (token) {
-            updateAuthButton();
-        }
+        // Mindig hívjuk meg az updateAuthButton-t, hogy a navbar láthatósága helyesen beálluljon
+        updateAuthButton();
     }
     
     // Auth gomb frissítése
     function updateAuthButton() {
         const user = JSON.parse(localStorage.getItem('user'));
+        
         if (user) {
+            // Bejelentkezett felhasználó: gomb szövegének frissítése
             authToggle.textContent = user.username;
             authToggle.title = 'Profil megtekintése';
+        } else {
+            // Nincs bejelentkezve: alapértelmezett szöveg
+            authToggle.textContent = 'Bejelentkezés';
+            authToggle.title = 'Bejelentkezés / Regisztráció';
         }
     }
 
