@@ -28,14 +28,40 @@
 
     <!-- HERO -->
     <section class="core-hero">
-        <h2>Beyond comfort. Beyond average.</h2>
+        <h2>Beyond <span id="typewriter-text" class="typewriter-word"></span><span class="cursor">|</span></h2>
         <p>
             Ez nem motiváció.<br>
             Ez egy rendszer azoknak, akik felelősséget vállalnak.
         </p>
     </section>
 
-    <!-- NAPI TEVÉKENYSÉGEK: Edzés, Arcápolás, Mentális egészség -->
+    <!-- YOUTUBE VIDEO SECTION -->
+    <section class="video-section">
+        <p class="video-intro">
+            Egy rövid videó, ami elmagyarázza a looksmaxxingot röviden.
+        </p>
+        <div class="video-container">
+            <iframe 
+                id="youtube-video"
+                src="https://www.youtube.com/embed/jfulHL73Mhc" 
+                frameborder="0" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                allowfullscreen>
+            </iframe>
+        </div>
+        <div class="video-stats">
+            <div><strong>1400+ férfi</strong> vállalta már a felelősséget.</div>
+            <div><strong>Átlagos progress:</strong> +1.4 PSL 90 nap alatt*</div>
+            <small>*valódi tagok önbevallása alapján</small>
+        </div>
+    </section>
+
+    <!-- SECTIONS -->
+    <section class="core-section" id="training">
+        
+    </section>
+
+    <!-- NAPI TEVÉKENYSÉGEK: Edzés, Arcápolás, Mentális egészség (Bottom) -->
     <section class="daily-checklist">
         <div class="dropdown-checklist">
             <button class="dropdown-toggle">Edzés</button>
@@ -55,12 +81,7 @@
                 <label><input type="checkbox" id="mental-check"> Ma foglalkoztam a mentális egészségemmel</label>
             </div>
         </div>
-    </section>
-    </section>
-
-    <!-- SECTIONS -->
-    <section class="core-section" id="training">
-        
+        <a href="#" id="cta-join" class="cta-join" aria-label="Csatlakozz a rendszerhez">Csatlakozz a rendszerhez</a>
     </section>
 
     <!-- Bejelentkezés/Regisztráció Modal -->

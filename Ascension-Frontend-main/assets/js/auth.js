@@ -8,9 +8,28 @@ document.addEventListener('DOMContentLoaded', function() {
     const authTabs = document.querySelectorAll('.auth-tab');
     const loginForm = document.getElementById('login-form');
     const registerForm = document.getElementById('register-form');
+    const ctaJoin = document.getElementById('cta-join');
 
     // Ellenőrizzük van-e bejelentkezett felhasználó
     checkAuthStatus();
+
+    // "Csatlakozz a rendszerhez" → modal megnyitása Regisztráció tabbal
+    if (ctaJoin) {
+        ctaJoin.addEventListener('click', function(e) {
+            e.preventDefault();
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (user) return;
+            authModal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            authTabs.forEach(t => t.classList.remove('active'));
+            const registerTab = document.querySelector('.auth-tab[data-tab="register"]');
+            if (registerTab) {
+                registerTab.classList.add('active');
+                registerForm.classList.add('active');
+                loginForm.classList.remove('active');
+            }
+        });
+    }
 
     // Modal megnyitása
     authToggle.addEventListener('click', function(e) {

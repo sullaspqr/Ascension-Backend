@@ -141,3 +141,78 @@ document.addEventListener("DOMContentLoaded", () => {
     updateVolumeButton();
   });
 });
+
+/* ================================
+   TYPEWRITER EFFECT: CORE-HERO
+   Only alternates "comfort" and "average" words
+================================ */
+document.addEventListener("DOMContentLoaded", () => {
+  const typewriterElement = document.getElementById("typewriter-text");
+  if (!typewriterElement) return;
+
+  const words = ["comfort", "average"];
+  let currentWordIndex = 0;
+  let currentCharIndex = 0;
+  let isDeleting = false;
+  let typingSpeed = 100; // milliseconds per character
+  let deletingSpeed = 50; // milliseconds per character (faster when deleting)
+  let pauseTime = 2000; // pause after completing a word
+
+  function typeWriter() {
+    const currentWord = words[currentWordIndex];
+    
+    if (isDeleting) {
+      // Deleting characters
+      typewriterElement.textContent = currentWord.substring(0, currentCharIndex - 1);
+      currentCharIndex--;
+      
+      if (currentCharIndex === 0) {
+        // Finished deleting, switch to next word
+        isDeleting = false;
+        currentWordIndex = (currentWordIndex + 1) % words.length;
+        setTimeout(typeWriter, 500); // Brief pause before starting next word
+        return;
+      }
+      
+      setTimeout(typeWriter, deletingSpeed);
+    } else {
+      // Typing characters
+      typewriterElement.textContent = currentWord.substring(0, currentCharIndex + 1);
+      currentCharIndex++;
+      
+      if (currentCharIndex === currentWord.length) {
+        // Finished typing, pause then start deleting
+        isDeleting = true;
+        setTimeout(typeWriter, pauseTime);
+        return;
+      }
+      
+      setTimeout(typeWriter, typingSpeed);
+    }
+  }
+
+  // Start the typewriter effect
+  typeWriter();
+});
+
+/* Daily checklist: dropdown toggle (open/close) */
+document.addEventListener("DOMContentLoaded", () => {
+  const toggles = document.querySelectorAll(".dropdown-toggle");
+  const container = document.querySelector(".daily-checklist");
+  if (!container || !toggles.length) return;
+
+  toggles.forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      const parent = btn.closest(".dropdown-checklist");
+      const wasOpen = parent.classList.contains("open");
+      container.querySelectorAll(".dropdown-checklist.open").forEach((el) => el.classList.remove("open"));
+      if (!wasOpen) parent.classList.add("open");
+    });
+  });
+
+  document.addEventListener("click", (e) => {
+    if (e.target.closest(".daily-checklist")) return;
+    container.querySelectorAll(".dropdown-checklist.open").forEach((el) => el.classList.remove("open"));
+  });
+});
