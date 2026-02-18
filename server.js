@@ -387,6 +387,133 @@ app.post("/api/auth/login", async (req, res) => {
   }
 });
 
+/* ====== PROFILE ENDPOINT ====== */
+
+// Profil adatok lekérése (felhasználó + alkohol statisztikák)
+app.get("/api/profile", authenticateToken, async (req, res) => {
+  try {
+    if (!db) {
+      return res.status(500).json({ 
+        success: false, 
+        error: "Adatbázis kapcsolat nincs!" 
+      });
+    }
+    
+    const userId = req.user.userId;
+    console.log('👤 Profil lekérés:', userId);
+    
+    // 1. Felhasználó alapadatok lekérése
+    const [users] = await db.execute(
+      'SELECT id, username, email, created_at FROM users WHERE id = ?',
+      [userId]
+    );
+    
+    if (users.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        error: "Felhasználó nem található" 
+      });
+    }
+    
+    const user = users[0];
+    
+    // 2. Heti statisztikák (ez a hét)
+    const [weekStats] = await db.execute(`
+      SELECT 
+        COUNT(*) as entries,
+        COALESCE(SUM(amount_ml), 0) as total_ml,
+        COALESCE(SUM(calories), 0) as total_calories
+      FROM alcohol_entries 
+      WHERE user_id = ? 
+      AND YEARWEEK(date, 1) = YEARWEEK(CURDATE(), 1)
+    `, [userId]);
+    
+    // 3. Havi statisztikák (ez a hónap)
+    const [monthStats] = await db.execute(`
+      SELECT 
+        COUNT(*) as entries,
+        COALESCE(SUM(amount_ml), 0) as total_ml,
+        COALESCE(SUM(calories), 0) as total_calories
+      FROM alcohol_entries 
+      WHERE user_id = ? 
+      AND YEAR(date) = YEAR(CURDATE())
+      AND MONTH(date) = MONTH(CURDATE())
+    `, [userId]);
+    
+    // 4. Összes statisztika
+    const [totalStats] = await db.execute(`
+      SELECT 
+        COUNT(*) as entries,
+        COALESCE(SUM(amount_ml), 0) as total_ml,
+        COALESCE(SUM(calories), 0) as total_calories,
+        COALESCE(AVG(alcohol_percentage), 0) as avg_alcohol_percentage
+      FROM alcohol_entries 
+      WHERE user_id = ?
+    `, [userId]);
+    
+    // 5. Legutóbbi 5 bejegyzés
+    const [recentEntries] = await db.execute(`
+      SELECT 
+        id,
+        drink_type,
+        amount_ml,
+        alcohol_percentage,
+        calories,
+        date,
+        created_at
+      FROM alcohol_entries 
+      WHERE user_id = ?
+      ORDER BY date DESC, created_at DESC
+      LIMIT 5
+    `, [userId]);
+    
+    console.log('✅ Profil adatok összegyűjtve!');
+    
+    // 6. Válasz összeállítása
+    res.json({
+      success: true,
+      profile: {
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          createdAt: user.created_at
+        },
+        stats: {
+          week: {
+            entries: weekStats[0].entries,
+            totalMl: weekStats[0].total_ml,
+            totalCalories: weekStats[0].total_calories
+          },
+          month: {
+            entries: monthStats[0].entries,
+            totalMl: monthStats[0].total_ml,
+            totalCalories: monthStats[0].total_calories
+          },
+          total: {
+            entries: totalStats[0].entries,
+            totalMl: totalStats[0].total_ml,
+            totalCalories: totalStats[0].total_calories,
+            avgAlcoholPercentage: parseFloat(totalStats[0].avg_alcohol_percentage).toFixed(1)
+          }
+        },
+        recentEntries: recentEntries.map(entry => ({
+          id: entry.id,
+          drinkType: entry.drink_type,
+          amountMl: entry.amount_ml,
+          alcoholPercentage: entry.alcohol_percentage,
+          calories: entry.calories,
+          date: entry.date,
+          createdAt: entry.created_at
+        }))
+      }
+    });
+  } catch (error) {
+    console.error("❌ Profile error:", error);
+    res.status(500).json({ success: false, error: "Szerver hiba: " + error.message });
+  }
+});
+
 /* ====== ALCOHOL TRACKING ENDPOINTS ====== */
 
 // Alkohol bejegyzés hozzáadása

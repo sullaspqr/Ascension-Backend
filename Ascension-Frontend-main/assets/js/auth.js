@@ -9,6 +9,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const loginForm = document.getElementById('login-form');
     const registerForm = document.getElementById('register-form');
     const ctaJoin = document.getElementById('cta-join');
+    const profileModal = document.getElementById('profile-modal');
+    const profileClose = document.querySelector('.profile-close');
+    const profileContent = document.getElementById('profile-content');
+    const logoutBtn = document.getElementById('logout-btn');
 
     // Ellenőrizzük van-e bejelentkezett felhasználó
     checkAuthStatus();
@@ -29,20 +33,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 loginForm.classList.remove('active');
             }
         });
-    }
-
-    // Modal megnyitása
+    }    // Modal megnyitása
     authToggle.addEventListener('click', function(e) {
         e.preventDefault();
         const user = JSON.parse(localStorage.getItem('user'));
         if (user) {
-            // Ha be van jelentkezve, kijelentkezés
-            if (confirm('Biztosan ki szeretnél jelentkezni?')) {
-                localStorage.removeItem('authToken');
-                localStorage.removeItem('user');
-                alert('Sikeresen kijelentkeztél!');
-                location.reload();
-            }
+            // Ha be van jelentkezve, profil modal megnyitása
+            openProfileModal();
         } else {
             // Ha nincs bejelentkezve, modal megnyitása
             authModal.classList.add('active');
@@ -190,7 +187,223 @@ document.addEventListener('DOMContentLoaded', function() {
         const user = JSON.parse(localStorage.getItem('user'));
         if (user) {
             authToggle.textContent = user.username;
-            authToggle.title = 'Kijelentkezés';
+            authToggle.title = 'Profil megtekintése';
         }
+    }
+
+    // ========== PROFIL MODAL FUNKCIÓK ==========
+    
+    // Profil modal megnyitása
+    async function openProfileModal() {
+        console.log('📊 Profil modal megnyitása...');
+        
+        profileModal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        
+        // Betöltés jelző megjelenítése
+        profileContent.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: #bdbdbd;">
+                <p>⏳ Profil adatok betöltése...</p>
+            </div>
+        `;
+        
+        // Profil adatok lekérése
+        await fetchProfileData();
+    }
+
+    // Profil adatok lekérése a backend-től
+    async function fetchProfileData() {
+        try {
+            const token = localStorage.getItem('authToken');
+            
+            if (!token) {
+                profileContent.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #ff6a6a;">
+                        <p>❌ Nincs bejelentkezve!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            console.log('🔄 Profil lekérés a backend-től...');
+            
+            const response = await fetch('http://localhost:3000/api/profile', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            const data = await response.json();
+            
+            console.log('✅ Profil válasz:', data);
+            
+            if (data.success) {
+                displayProfileData(data.profile);
+            } else {
+                profileContent.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #ff6a6a;">
+                        <p>❌ ${data.error || 'Profil betöltése sikertelen'}</p>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.error('❌ Profil lekérési hiba:', error);
+            profileContent.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: #ff6a6a;">
+                    <p>❌ Nem lehet kapcsolódni a szerverhez!</p>
+                    <p style="font-size: 14px; margin-top: 10px;">Ellenőrizd, hogy a backend fut-e.</p>
+                </div>
+            `;
+        }
+    }
+
+    // Profil adatok megjelenítése
+    function displayProfileData(profile) {
+        console.log('🎨 Profil megjelenítése:', profile);
+        
+        const { user, stats, recentEntries } = profile;
+        
+        // Dátum formázása
+        const formatDate = (dateString) => {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('hu-HU', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+        };
+        
+        // Felhasználói adatok section
+        let html = `
+            <div class="profile-section">
+                <h3>👤 Felhasználói adatok</h3>
+                <div class="profile-info">
+                    <p><strong>Felhasználónév:</strong> ${user.username}</p>
+                    <p><strong>E-mail:</strong> ${user.email}</p>
+                    <p><strong>Regisztráció dátuma:</strong> ${formatDate(user.createdAt)}</p>
+                </div>
+            </div>
+        `;
+        
+        // Statisztikák section
+        html += `
+            <div class="profile-section">
+                <h3>📊 Alkoholfogyasztás statisztikák</h3>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-title">🗓️ Ez a hét</div>
+                        <div class="stat-value">${Math.round(stats.week.totalMl)} ml</div>
+                        <div class="stat-details">
+                            <p>${stats.week.entries} bejegyzés</p>
+                            <p>${Math.round(stats.week.totalCalories)} kalória</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-title">📅 Ez a hónap</div>
+                        <div class="stat-value">${Math.round(stats.month.totalMl)} ml</div>
+                        <div class="stat-details">
+                            <p>${stats.month.entries} bejegyzés</p>
+                            <p>${Math.round(stats.month.totalCalories)} kalória</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-title">🏆 Összesen</div>
+                        <div class="stat-value">${Math.round(stats.total.totalMl)} ml</div>
+                        <div class="stat-details">
+                            <p>${stats.total.entries} bejegyzés</p>
+                            <p>${Math.round(stats.total.totalCalories)} kalória</p>
+                            <p>Átlag: ${stats.total.avgAlcoholPercentage}% alkohol</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Legutóbbi bejegyzések section
+        html += `
+            <div class="profile-section">
+                <h3>🍺 Legutóbbi 5 bejegyzés</h3>
+        `;
+        
+        if (recentEntries.length === 0) {
+            html += `
+                <div style="text-align: center; padding: 20px; color: #bdbdbd;">
+                    <p>Még nincsenek bejegyzések.</p>
+                </div>
+            `;
+        } else {
+            html += `<div class="entries-list">`;
+            
+            recentEntries.forEach(entry => {
+                const entryDate = new Date(entry.date);
+                const formattedDate = entryDate.toLocaleDateString('hu-HU', { 
+                    month: 'short', 
+                    day: 'numeric' 
+                });
+                
+                html += `
+                    <div class="entry-item">
+                        <div class="entry-header">
+                            <span class="entry-type">🍷 ${entry.drinkType}</span>
+                            <span class="entry-date">${formattedDate}</span>
+                        </div>
+                        <div class="entry-details">
+                            <span>${entry.amountMl} ml</span>
+                            <span>${entry.alcoholPercentage}%</span>
+                            <span>${Math.round(entry.calories)} kcal</span>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += `</div>`;
+        }
+        
+        html += `</div>`;
+        
+        profileContent.innerHTML = html;
+    }
+
+    // Profil modal bezárása
+    if (profileClose) {
+        profileClose.addEventListener('click', function() {
+            profileModal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        });
+    }
+
+    // Modal bezárása kattintásra a háttéren
+    if (profileModal) {
+        profileModal.addEventListener('click', function(e) {
+            if (e.target === profileModal) {
+                profileModal.classList.remove('active');
+                document.body.style.overflow = 'auto';
+            }
+        });
+    }
+
+    // Modal bezárása ESC billentyűre
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && profileModal && profileModal.classList.contains('active')) {
+            profileModal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+    });
+
+    // Kijelentkezés gomb
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', function() {
+            if (confirm('Biztosan ki szeretnél jelentkezni?')) {
+                console.log('👋 Kijelentkezés...');
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('user');
+                alert('✅ Sikeresen kijelentkeztél!');
+                location.reload();
+            }
+        });
     }
 });
