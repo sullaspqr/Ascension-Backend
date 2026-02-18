@@ -42,9 +42,7 @@
         Fegyelem a motiváció helyett.<br />
         Tudatosság az ösztönök felett.
       </p>
-    </main>
-
-    <!-- Bejelentkezés/Regisztráció Modal -->
+    </main>    <!-- Bejelentkezés/Regisztráció Modal -->
     <div id="auth-modal" class="auth-modal">
       <div class="auth-modal-content">
         <button class="auth-close" aria-label="Bezárás">&times;</button>
@@ -90,6 +88,24 @@
           </div>
           <button type="submit" class="btn-auth">Regisztráció</button>
         </form>
+      </div>
+    </div>
+
+    <!-- Profil Modal -->
+    <div id="profile-modal" class="auth-modal">
+      <div class="auth-modal-content profile-modal-content">
+        <button class="auth-close profile-close" aria-label="Bezárás">&times;</button>
+        
+        <h2 style="text-align: center; margin-bottom: 30px; font-family: 'Cinzel', serif; color: #f5f5f5;">Profilom</h2>
+        
+        <div id="profile-content">
+          <!-- Ide kerül a dinamikusan generált profil tartalom -->
+          <div style="text-align: center; padding: 40px; color: #bdbdbd;">
+            <p>Profil betöltése...</p>
+          </div>
+        </div>
+        
+        <button id="logout-btn" class="logout-btn">Kijelentkezés</button>
       </div>
     </div>
 
