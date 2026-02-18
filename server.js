@@ -467,9 +467,62 @@ app.get("/api/profile", authenticateToken, async (req, res) => {
       LIMIT 5
     `, [userId]);
     
+    // 6. ÉTEL - Heti statisztikák (ez a hét)
+    const [foodWeekStats] = await db.execute(`
+      SELECT 
+        COUNT(*) as entries,
+        COALESCE(SUM(calories), 0) as total_calories,
+        COALESCE(SUM(protein_g), 0) as total_protein,
+        COALESCE(SUM(carbs_g), 0) as total_carbs
+      FROM food_entries 
+      WHERE user_id = ? 
+      AND YEARWEEK(date, 1) = YEARWEEK(CURDATE(), 1)
+    `, [userId]);
+    
+    // 7. ÉTEL - Havi statisztikák (ez a hónap)
+    const [foodMonthStats] = await db.execute(`
+      SELECT 
+        COUNT(*) as entries,
+        COALESCE(SUM(calories), 0) as total_calories,
+        COALESCE(SUM(protein_g), 0) as total_protein,
+        COALESCE(SUM(carbs_g), 0) as total_carbs
+      FROM food_entries 
+      WHERE user_id = ? 
+      AND YEAR(date) = YEAR(CURDATE())
+      AND MONTH(date) = MONTH(CURDATE())
+    `, [userId]);
+    
+    // 8. ÉTEL - Összes statisztika
+    const [foodTotalStats] = await db.execute(`
+      SELECT 
+        COUNT(*) as entries,
+        COALESCE(SUM(calories), 0) as total_calories,
+        COALESCE(SUM(protein_g), 0) as total_protein,
+        COALESCE(SUM(carbs_g), 0) as total_carbs
+      FROM food_entries 
+      WHERE user_id = ?
+    `, [userId]);
+    
+    // 9. ÉTEL - Legutóbbi 5 bejegyzés
+    const [recentFoodEntries] = await db.execute(`
+      SELECT 
+        id,
+        food_name,
+        grams,
+        calories,
+        protein_g,
+        carbs_g,
+        date,
+        created_at
+      FROM food_entries 
+      WHERE user_id = ?
+      ORDER BY date DESC, created_at DESC
+      LIMIT 5
+    `, [userId]);
+    
     console.log('✅ Profil adatok összegyűjtve!');
     
-    // 6. Válasz összeállítása
+    // 10. Válasz összeállítása
     res.json({
       success: true,
       profile: {
@@ -479,7 +532,7 @@ app.get("/api/profile", authenticateToken, async (req, res) => {
           email: user.email,
           createdAt: user.created_at
         },
-        stats: {
+        alcohol: {
           week: {
             entries: weekStats[0].entries,
             totalMl: weekStats[0].total_ml,
@@ -495,17 +548,47 @@ app.get("/api/profile", authenticateToken, async (req, res) => {
             totalMl: totalStats[0].total_ml,
             totalCalories: totalStats[0].total_calories,
             avgAlcoholPercentage: parseFloat(totalStats[0].avg_alcohol_percentage).toFixed(1)
-          }
+          },
+          recentEntries: recentEntries.map(entry => ({
+            id: entry.id,
+            drinkType: entry.drink_type,
+            amountMl: entry.amount_ml,
+            alcoholPercentage: entry.alcohol_percentage,
+            calories: entry.calories,
+            date: entry.date,
+            createdAt: entry.created_at
+          }))
         },
-        recentEntries: recentEntries.map(entry => ({
-          id: entry.id,
-          drinkType: entry.drink_type,
-          amountMl: entry.amount_ml,
-          alcoholPercentage: entry.alcohol_percentage,
-          calories: entry.calories,
-          date: entry.date,
-          createdAt: entry.created_at
-        }))
+        food: {
+          week: {
+            entries: foodWeekStats[0].entries,
+            totalCalories: foodWeekStats[0].total_calories,
+            totalProtein: parseFloat(foodWeekStats[0].total_protein).toFixed(1),
+            totalCarbs: parseFloat(foodWeekStats[0].total_carbs).toFixed(1)
+          },
+          month: {
+            entries: foodMonthStats[0].entries,
+            totalCalories: foodMonthStats[0].total_calories,
+            totalProtein: parseFloat(foodMonthStats[0].total_protein).toFixed(1),
+            totalCarbs: parseFloat(foodMonthStats[0].total_carbs).toFixed(1)
+          },
+          total: {
+            entries: foodTotalStats[0].entries,
+            totalCalories: foodTotalStats[0].total_calories,
+            totalProtein: parseFloat(foodTotalStats[0].total_protein).toFixed(1),
+            totalCarbs: parseFloat(foodTotalStats[0].total_carbs).toFixed(1)
+          },
+          recentEntries: recentFoodEntries.map(entry => ({
+            id: entry.id,
+            foodName: entry.food_name,
+            grams: entry.grams,
+            calories: entry.calories,
+            proteinG: parseFloat(entry.protein_g).toFixed(1),
+            carbsG: parseFloat(entry.carbs_g).toFixed(1),
+            date: entry.date,
+            createdAt: entry.created_at
+          }))
+        }
       }
     });
   } catch (error) {
@@ -671,6 +754,125 @@ app.get("/api/alcohol/stats", authenticateToken, async (req, res) => {
     });
   } catch (error) {
     console.error("❌ Alcohol stats error:", error);
+    res.status(500).json({ success: false, error: "Szerver hiba: " + error.message });
+  }
+});
+
+/* ====== FOOD TRACKING ENDPOINTS ====== */
+
+// Étel bejegyzés hozzáadása
+app.post("/api/food/add", authenticateToken, async (req, res) => {
+  try {
+    if (!db) {
+      return res.status(500).json({ 
+        success: false, 
+        error: "Adatbázis kapcsolat nincs!" 
+      });
+    }
+    
+    const { foodName, grams, calories, proteinG, carbsG, date } = req.body;
+    const userId = req.user.userId;
+    
+    console.log('🍎 Étel hozzáadás:', { userId, foodName, grams });
+    
+    if (!foodName || !grams || calories === undefined || proteinG === undefined || carbsG === undefined || !date) {
+      return res.status(400).json({ 
+        success: false, 
+        error: "Minden mező kitöltése kötelező" 
+      });
+    }
+    
+    const [result] = await db.execute(
+      'INSERT INTO food_entries (user_id, food_name, grams, calories, protein_g, carbs_g, date) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [userId, foodName, grams, calories, proteinG, carbsG, date]
+    );
+    
+    console.log('✅ Étel bejegyzés mentve! ID:', result.insertId);
+    
+    res.json({
+      success: true,
+      message: "Étel bejegyzés sikeresen hozzáadva",
+      entryId: result.insertId
+    });
+  } catch (error) {
+    console.error("❌ Food add error:", error);
+    res.status(500).json({ success: false, error: "Szerver hiba: " + error.message });
+  }
+});
+
+// Étel bejegyzések lekérése (adott dátum vagy időszak)
+app.get("/api/food/entries", authenticateToken, async (req, res) => {
+  try {
+    if (!db) {
+      return res.status(500).json({ 
+        success: false, 
+        error: "Adatbázis kapcsolat nincs!" 
+      });
+    }
+    
+    const userId = req.user.userId;
+    const { date, startDate, endDate } = req.query;
+    
+    let query = 'SELECT * FROM food_entries WHERE user_id = ?';
+    let params = [userId];
+    
+    if (date) {
+      query += ' AND date = ?';
+      params.push(date);
+    } else if (startDate && endDate) {
+      query += ' AND date BETWEEN ? AND ?';
+      params.push(startDate, endDate);
+    }
+    
+    query += ' ORDER BY date DESC, created_at DESC';
+    
+    const [entries] = await db.execute(query, params);
+    
+    res.json({
+      success: true,
+      entries
+    });
+  } catch (error) {
+    console.error("❌ Food entries error:", error);
+    res.status(500).json({ success: false, error: "Szerver hiba: " + error.message });
+  }
+});
+
+// Étel bejegyzés törlése
+app.delete("/api/food/:id", authenticateToken, async (req, res) => {
+  try {
+    if (!db) {
+      return res.status(500).json({ 
+        success: false, 
+        error: "Adatbázis kapcsolat nincs!" 
+      });
+    }
+    
+    const userId = req.user.userId;
+    const entryId = req.params.id;
+    
+    const [entries] = await db.execute(
+      'SELECT id FROM food_entries WHERE id = ? AND user_id = ?',
+      [entryId, userId]
+    );
+    
+    if (entries.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        error: "Bejegyzés nem található vagy nincs jogosultságod hozzá" 
+      });
+    }
+    
+    await db.execute('DELETE FROM food_entries WHERE id = ?', [entryId]);
+    
+    console.log('✅ Étel bejegyzés törölve! ID:', entryId);
+    
+    res.json({
+      success: true,
+      message: "Bejegyzés sikeresen törölve"
+    });
+  } catch (error) {
+    console.error("❌ Food delete error:", error);
     res.status(500).json({ success: false, error: "Szerver hiba: " + error.message });
   }
 });

@@ -608,15 +608,58 @@ async function searchFood(query) {
   }
 }
 
-function addFoodEntry(item, grams) {
+async function addFoodEntry(item, grams) {
+  const token = localStorage.getItem("authToken");
+  
   const scale = grams / 100.0;
+  const calories = roundNum((item.nutrients.energyKcal || 0) * scale);
+  const proteinG = roundNum((item.nutrients.proteinG || 0) * scale);
+  const carbG = roundNum((item.nutrients.carbG || 0) * scale);
+  
+  // Ha be van jelentkezve, mentjük a backend-be
+  if (token) {
+    try {
+      const date = new Date().toISOString().split('T')[0];
+      const response = await fetch("http://localhost:3000/api/food/add", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          foodName: item.description,
+          grams,
+          calories,
+          proteinG,
+          carbsG: carbG,
+          date
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        console.log('✅ Étel bejegyzés mentve az adatbázisba!');
+      } else {
+        console.error('❌ Étel mentés hiba:', data.error);
+        alert('Hiba történt a mentés során: ' + data.error);
+        return;
+      }
+    } catch (error) {
+      console.error('❌ Hálózati hiba:', error);
+      alert('Hálózati hiba történt. Ellenőrizd a kapcsolatot!');
+      return;
+    }
+  }
+  
+  // LocalStorage mentés (fallback, vagy ha nincs bejelentkezve)
   const entry = {
     id: Date.now() + Math.random(),
     description: item.description,
     grams,
-    energyKcal: roundNum((item.nutrients.energyKcal || 0) * scale),
-    proteinG: roundNum((item.nutrients.proteinG || 0) * scale),
-    carbG: roundNum((item.nutrients.carbG || 0) * scale),
+    energyKcal: calories,
+    proteinG: proteinG,
+    carbG: carbG,
   };
   foodEntries.push(entry);
   persistToday();

@@ -26,3 +26,18 @@ CREATE TABLE IF NOT EXISTS alcohol_entries (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     INDEX idx_user_date (user_id, date)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Kalória számláló (étel) követési tábla
+CREATE TABLE IF NOT EXISTS food_entries (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    food_name VARCHAR(200) NOT NULL,
+    grams INT NOT NULL,
+    calories INT NOT NULL,
+    protein_g DECIMAL(6,1) NOT NULL,
+    carbs_g DECIMAL(6,1) NOT NULL,
+    date DATE NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_user_date (user_id, date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
