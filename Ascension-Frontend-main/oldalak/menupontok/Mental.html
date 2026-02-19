@@ -30,9 +30,7 @@
       >
         Bejelentkezés
       </button>
-    </header>
-
-    <main class="mainwindow-content">
+    </header>    <main class="mainwindow-content">
       <h2>Mentális</h2>
       <p>
         Az önfejlesztés nem trend.<br />
@@ -42,7 +40,21 @@
         Fegyelem a motiváció helyett.<br />
         Tudatosság az ösztönök felett.
       </p>
-    </main>    <!-- Bejelentkezés/Regisztráció Modal -->
+      
+      <!-- Napi Motivációs Idézet -->
+      <section class="motivation-section">
+        <h3>📌 Mai Motiváció</h3>
+        <div id="motivation-quote" class="motivation-quote">
+          <p class="quote-text"></p>
+          <button id="refresh-quote" class="btn-refresh-quote" title="Új idézet">🔄</button>
+        </div>
+      </section>
+      
+      <!-- Vissza a főoldalra gomb -->
+      <div class="back-to-home">
+        <a href="../main.html" class="btn-back-home">← Vissza a főoldalra</a>
+      </div>
+    </main><!-- Bejelentkezés/Regisztráció Modal -->
     <div id="auth-modal" class="auth-modal">
       <div class="auth-modal-content">
         <button class="auth-close" aria-label="Bezárás">&times;</button>
@@ -107,8 +119,55 @@
         
         <button id="logout-btn" class="logout-btn">Kijelentkezés</button>
       </div>
-    </div>
-
-    <script src="../../assets/js/auth.js"></script>
+    </div>    <script src="../../assets/js/auth.js"></script>
+    <script>
+      // Motivációs idézetek tömbje
+      const motivationalQuotes = [
+        "A siker nem véletlenszerű. Rendszer kérdése.",
+        "Nem a motiváció visz előre, hanem a fegyelem.",
+        "Minden nap egy lehetőség, hogy jobbá válj, mint tegnap voltál.",
+        "A kiválóság útja apró, következetes lépésekből áll.",
+        "Aki vár a tökéletes pillanatra, az örökké vár.",
+        "Az igazi győzelem önmagad felett aratott.",
+        "Ne az legyen a kérdés, hogy képes vagy-e rá. Hanem az, hogy meg fogod-e tenni.",
+        "A kényelemzóna széle ott kezdődik, ahol a fejlődés.",
+        "A tudatosság az első lépés a változás felé.",
+        "Nem az számít, honnan indulsz, hanem hová tartasz.",
+        "A felelősség átvétele erőt ad. A kifogások gyengítenek.",
+        "Az elméd a te edzőtermed. Eddzd, formáld, fejleszd.",
+        "Amit ma megteszel, holnap köszönni fogod magadnak.",
+        "A változás nem holnap kezdődik. Most.",
+        "Az önfejlesztés sosem ér véget. Ez az út maga a cél.",
+        "A mentális erő fontosabb, mint a fizikai.",
+        "Nem attól leszel erős, hogy soha nem esel el, hanem attól, ahogy felállsz.",
+        "A tiszta gondolatok tiszta életet hoznak.",
+        "A kitartás legyőzi a tehetséget, ha a tehetség nem dolgozik.",
+        "Minden nagy utazás egyetlen lépéssel kezdődik."
+      ];
+      
+      // Random idézet betöltése
+      function loadRandomQuote() {
+        const quoteText = document.querySelector('.quote-text');
+        if (quoteText) {
+          const randomIndex = Math.floor(Math.random() * motivationalQuotes.length);
+          quoteText.textContent = motivationalQuotes[randomIndex];
+          quoteText.style.animation = 'none';
+          setTimeout(() => {
+            quoteText.style.animation = 'fadeInQuote 0.6s ease';
+          }, 10);
+        }
+      }
+      
+      // Oldal betöltésekor random idézet
+      document.addEventListener('DOMContentLoaded', () => {
+        loadRandomQuote();
+        
+        // Frissítés gomb
+        const refreshBtn = document.getElementById('refresh-quote');
+        if (refreshBtn) {
+          refreshBtn.addEventListener('click', loadRandomQuote);
+        }
+      });
+    </script>
   </body>
 </html>
