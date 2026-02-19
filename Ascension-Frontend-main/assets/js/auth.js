@@ -268,7 +268,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function displayProfileData(profile) {
         console.log('🎨 Profil megjelenítése:', profile);
         
-        const { user, stats, recentEntries } = profile;
+        const { user, alcohol, food } = profile;
         
         // Dátum formázása
         const formatDate = (dateString) => {
@@ -292,58 +292,96 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         `;
         
-        // Statisztikák section
+        // Alkohol Statisztikák section
         html += `
             <div class="profile-section">
-                <h3>📊 Alkoholfogyasztás statisztikák</h3>
+                <h3>🍺 Alkoholfogyasztás statisztikák</h3>
                 <div class="stats-grid">
                     <div class="stat-card">
                         <div class="stat-title">🗓️ Ez a hét</div>
-                        <div class="stat-value">${Math.round(stats.week.totalMl)} ml</div>
+                        <div class="stat-value">${Math.round(alcohol.week.totalMl)} ml</div>
                         <div class="stat-details">
-                            <p>${stats.week.entries} bejegyzés</p>
-                            <p>${Math.round(stats.week.totalCalories)} kalória</p>
+                            <p>${alcohol.week.entries} bejegyzés</p>
+                            <p>${Math.round(alcohol.week.totalCalories)} kalória</p>
                         </div>
                     </div>
                     
                     <div class="stat-card">
                         <div class="stat-title">📅 Ez a hónap</div>
-                        <div class="stat-value">${Math.round(stats.month.totalMl)} ml</div>
+                        <div class="stat-value">${Math.round(alcohol.month.totalMl)} ml</div>
                         <div class="stat-details">
-                            <p>${stats.month.entries} bejegyzés</p>
-                            <p>${Math.round(stats.month.totalCalories)} kalória</p>
+                            <p>${alcohol.month.entries} bejegyzés</p>
+                            <p>${Math.round(alcohol.month.totalCalories)} kalória</p>
                         </div>
                     </div>
                     
                     <div class="stat-card">
                         <div class="stat-title">🏆 Összesen</div>
-                        <div class="stat-value">${Math.round(stats.total.totalMl)} ml</div>
+                        <div class="stat-value">${Math.round(alcohol.total.totalMl)} ml</div>
                         <div class="stat-details">
-                            <p>${stats.total.entries} bejegyzés</p>
-                            <p>${Math.round(stats.total.totalCalories)} kalória</p>
-                            <p>Átlag: ${stats.total.avgAlcoholPercentage}% alkohol</p>
+                            <p>${alcohol.total.entries} bejegyzés</p>
+                            <p>${Math.round(alcohol.total.totalCalories)} kalória</p>
+                            <p>Átlag: ${alcohol.total.avgAlcoholPercentage}% alkohol</p>
                         </div>
                     </div>
                 </div>
             </div>
         `;
         
-        // Legutóbbi bejegyzések section
+        // Étel Tracker Statisztikák section
         html += `
             <div class="profile-section">
-                <h3>🍺 Legutóbbi 5 bejegyzés</h3>
+                <h3>🍎 Kalória számláló statisztikák</h3>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-title">🗓️ Ez a hét</div>
+                        <div class="stat-value">${Math.round(food.week.totalCalories)} kcal</div>
+                        <div class="stat-details">
+                            <p>${food.week.entries} bejegyzés</p>
+                            <p>${food.week.totalProtein}g fehérje</p>
+                            <p>${food.week.totalCarbs}g szénhidrát</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-title">📅 Ez a hónap</div>
+                        <div class="stat-value">${Math.round(food.month.totalCalories)} kcal</div>
+                        <div class="stat-details">
+                            <p>${food.month.entries} bejegyzés</p>
+                            <p>${food.month.totalProtein}g fehérje</p>
+                            <p>${food.month.totalCarbs}g szénhidrát</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-title">🏆 Összesen</div>
+                        <div class="stat-value">${Math.round(food.total.totalCalories)} kcal</div>
+                        <div class="stat-details">
+                            <p>${food.total.entries} bejegyzés</p>
+                            <p>${food.total.totalProtein}g fehérje</p>
+                            <p>${food.total.totalCarbs}g szénhidrát</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         `;
         
-        if (recentEntries.length === 0) {
+        // Legutóbbi alkohol bejegyzések section
+        html += `
+            <div class="profile-section">
+                <h3>🍺 Legutóbbi alkohol bejegyzések (5)</h3>
+        `;
+        
+        if (alcohol.recentEntries.length === 0) {
             html += `
                 <div style="text-align: center; padding: 20px; color: #bdbdbd;">
-                    <p>Még nincsenek bejegyzések.</p>
+                    <p>Még nincsenek alkohol bejegyzések.</p>
                 </div>
             `;
         } else {
             html += `<div class="entries-list">`;
             
-            recentEntries.forEach(entry => {
+            alcohol.recentEntries.forEach(entry => {
                 const entryDate = new Date(entry.date);
                 const formattedDate = entryDate.toLocaleDateString('hu-HU', { 
                     month: 'short', 
@@ -360,6 +398,49 @@ document.addEventListener('DOMContentLoaded', function() {
                             <span>${entry.amountMl} ml</span>
                             <span>${entry.alcoholPercentage}%</span>
                             <span>${Math.round(entry.calories)} kcal</span>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += `</div>`;
+        }
+        
+        html += `</div>`;
+        
+        // Legutóbbi étel bejegyzések section
+        html += `
+            <div class="profile-section">
+                <h3>🥗 Legutóbbi étel bejegyzések (5)</h3>
+        `;
+        
+        if (food.recentEntries.length === 0) {
+            html += `
+                <div style="text-align: center; padding: 20px; color: #bdbdbd;">
+                    <p>Még nincsenek étel bejegyzések.</p>
+                </div>
+            `;
+        } else {
+            html += `<div class="entries-list">`;
+            
+            food.recentEntries.forEach(entry => {
+                const entryDate = new Date(entry.date);
+                const formattedDate = entryDate.toLocaleDateString('hu-HU', { 
+                    month: 'short', 
+                    day: 'numeric' 
+                });
+                
+                html += `
+                    <div class="entry-item">
+                        <div class="entry-header">
+                            <span class="entry-type">🥗 ${entry.foodName}</span>
+                            <span class="entry-date">${formattedDate}</span>
+                        </div>
+                        <div class="entry-details">
+                            <span>${entry.grams}g</span>
+                            <span>${Math.round(entry.calories)} kcal</span>
+                            <span>F: ${entry.proteinG}g</span>
+                            <span>SH: ${entry.carbsG}g</span>
                         </div>
                     </div>
                 `;
